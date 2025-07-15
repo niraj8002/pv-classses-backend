@@ -1,5 +1,5 @@
-const Enrollment = require('../models/Enrollment');
-const Course = require('../models/Course');
+const Enrollment = require("../models/Enrollment");
+const Course = require("../models/Course");
 
 // @desc    Get user enrollments
 // @route   GET /api/enrollments
@@ -7,18 +7,18 @@ const Course = require('../models/Course');
 exports.getEnrollments = async (req, res, next) => {
   try {
     const enrollments = await Enrollment.find({ user: req.user.id })
-      .populate('course', 'title description thumbnail price instructor')
-      .populate('course.instructor', 'name');
+      .populate("course", "title description thumbnail price instructor")
+      .populate("course.instructor", "name");
 
     res.status(200).json({
       success: true,
       count: enrollments.length,
-      data: enrollments
+      data: enrollments,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -29,32 +29,35 @@ exports.getEnrollments = async (req, res, next) => {
 exports.getEnrollment = async (req, res, next) => {
   try {
     const enrollment = await Enrollment.findById(req.params.id)
-      .populate('course', 'title description thumbnail price instructor')
-      .populate('user', 'name email');
+      .populate("course", "title description thumbnail price instructor")
+      .populate("user", "name email");
 
     if (!enrollment) {
       return res.status(404).json({
         success: false,
-        message: 'Enrollment not found'
+        message: "Enrollment not found",
       });
     }
 
     // Check if user owns enrollment or is admin
-    if (enrollment.user._id.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (
+      enrollment.user._id.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this enrollment'
+        message: "Not authorized to access this enrollment",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: enrollment
+      data: enrollment,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -71,41 +74,42 @@ exports.createEnrollment = async (req, res, next) => {
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: "Course not found",
       });
     }
 
     // Check if user is already enrolled
     const existingEnrollment = await Enrollment.findOne({
       user: req.user.id,
-      course: courseId
+      course: courseId,
     });
 
     if (existingEnrollment) {
       return res.status(400).json({
         success: false,
-        message: 'Already enrolled in this course'
+        message: "Already enrolled in this course",
       });
     }
 
     const enrollment = await Enrollment.create({
       user: req.user.id,
-      course: courseId
+      course: courseId,
     });
 
     // Update course enrollment count
     await Course.findByIdAndUpdate(courseId, {
-      $inc: { enrollmentCount: 1 }
+      $inc: { enrollmentCount: 1 },
     });
 
     res.status(201).json({
+      message: "Enrollment created successfully",
       success: true,
-      data: enrollment
+      data: enrollment,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -120,7 +124,7 @@ exports.updateEnrollment = async (req, res, next) => {
     if (!enrollment) {
       return res.status(404).json({
         success: false,
-        message: 'Enrollment not found'
+        message: "Enrollment not found",
       });
     }
 
@@ -128,7 +132,7 @@ exports.updateEnrollment = async (req, res, next) => {
     if (enrollment.user.toString() !== req.user.id) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to update this enrollment'
+        message: "Not authorized to update this enrollment",
       });
     }
 
@@ -140,17 +144,17 @@ exports.updateEnrollment = async (req, res, next) => {
 
     enrollment = await Enrollment.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     res.status(200).json({
       success: true,
-      data: enrollment
+      data: enrollment,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -165,15 +169,18 @@ exports.deleteEnrollment = async (req, res, next) => {
     if (!enrollment) {
       return res.status(404).json({
         success: false,
-        message: 'Enrollment not found'
+        message: "Enrollment not found",
       });
     }
 
     // Check if user owns enrollment or is admin
-    if (enrollment.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (
+      enrollment.user.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to delete this enrollment'
+        message: "Not authorized to delete this enrollment",
       });
     }
 
@@ -181,17 +188,17 @@ exports.deleteEnrollment = async (req, res, next) => {
 
     // Update course enrollment count
     await Course.findByIdAndUpdate(enrollment.course, {
-      $inc: { enrollmentCount: -1 }
+      $inc: { enrollmentCount: -1 },
     });
 
     res.status(200).json({
       success: true,
-      message: 'Enrollment deleted successfully'
+      message: "Enrollment deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };

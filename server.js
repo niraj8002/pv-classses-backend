@@ -22,6 +22,7 @@ const paymentRoutes = require("./routes/payments");
 // Error handler middleware
 const errorHandler = require("./middleware/error");
 const connectMongoDB = require("./db/db");
+const { getallLessons } = require("./controllers/lessons");
 
 const app = express();
 connectMongoDB;

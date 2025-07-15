@@ -5,6 +5,7 @@ const {
   createLesson,
   updateLesson,
   deleteLesson,
+  getallLessons,
 } = require("../controllers/lessons");
 const { protect, authorize } = require("../middleware/auth");
 
@@ -14,6 +15,8 @@ router
   .route("/")
   .get(getLessons)
   .post(protect, authorize("instructor", "admin"), createLesson);
+
+router.route("/all_lessons").get(getallLessons);
 
 router
   .route("/:id")

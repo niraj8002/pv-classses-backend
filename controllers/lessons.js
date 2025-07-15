@@ -1,9 +1,28 @@
 const Lesson = require("../models/Lesson");
 const Course = require("../models/Course");
 
+// get all lessons
+exports.getallLessons = async (req, res, next) => {
+  try {
+    const lessons = await Lesson.find().sort("order");
+    res.status(200).json({
+      success: true,
+      count: lessons.length,
+      data: lessons,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+
 // @desc    Get all lessons for a course
 // @route   GET /api/courses/:courseId/lessons
 // @access  Public
+
 exports.getLessons = async (req, res, next) => {
   try {
     const lessons = await Lesson.find({ course: req.params.courseId }).sort(
