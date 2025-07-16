@@ -18,7 +18,6 @@ exports.getallLessons = async (req, res, next) => {
   }
 };
 
-
 // @desc    Get all lessons for a course
 // @route   GET /api/courses/:courseId/lessons
 // @access  Public
@@ -133,7 +132,7 @@ exports.updateLesson = async (req, res, next) => {
     if (!lesson) {
       return res.status(404).json({
         success: false,
-        message: "Lesson not found",
+        message: "Lesson not  found",
       });
     }
 
@@ -158,6 +157,18 @@ exports.updateLesson = async (req, res, next) => {
       data: lesson,
     });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Lesson with this title already exists",
+      });
+    }
     res.status(500).json({
       success: false,
       message: "Server Error",

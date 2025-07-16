@@ -11,7 +11,7 @@ const { protect } = require('../middleware/auth');
 const router = express.Router();
 
 router.use(protect);
-
+// /api/enrollments/
 router.route('/')
   .get(getEnrollments)
   .post(createEnrollment);

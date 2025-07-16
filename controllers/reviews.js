@@ -1,6 +1,6 @@
-const Review = require('../models/Review');
-const Course = require('../models/Course');
-const Enrollment = require('../models/Enrollment');
+const Review = require("../models/Review");
+const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
 
 // @desc    Get all reviews for a course
 // @route   GET /api/courses/:courseId/reviews
@@ -8,46 +8,46 @@ const Enrollment = require('../models/Enrollment');
 exports.getReviews = async (req, res, next) => {
   try {
     const reviews = await Review.find({ course: req.params.courseId })
-      .populate('user', 'name')
-      .sort('-createdAt');
+      .populate("user", "name")
+      .sort("-createdAt");
 
     res.status(200).json({
       success: true,
       count: reviews.length,
-      data: reviews
+      data: reviews,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
 
 // @desc    Get single review
-// @route   GET /api/reviews/:id
+// @route   GET /api/reviews/:id....(reviews/:id)
 // @access  Public
 exports.getReview = async (req, res, next) => {
   try {
     const review = await Review.findById(req.params.id)
-      .populate('user', 'name')
-      .populate('course', 'title');
+      .populate("user", "name")
+      .populate("course", "title");
 
     if (!review) {
       return res.status(404).json({
         success: false,
-        message: 'Review not found'
+        message: "Review not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: review
+      data: review,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -62,33 +62,33 @@ exports.createReview = async (req, res, next) => {
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: "Course not found",
       });
     }
 
     // Check if user is enrolled in the course
     const enrollment = await Enrollment.findOne({
       user: req.user.id,
-      course: req.params.courseId
+      course: req.params.courseId,
     });
 
     if (!enrollment) {
       return res.status(400).json({
         success: false,
-        message: 'You must be enrolled in the course to leave a review'
+        message: "You must be enrolled in the course to leave a review",
       });
     }
 
     // Check if user has already reviewed this course
     const existingReview = await Review.findOne({
       user: req.user.id,
-      course: req.params.courseId
+      course: req.params.courseId,
     });
 
     if (existingReview) {
       return res.status(400).json({
         success: false,
-        message: 'You have already reviewed this course'
+        message: "You have already reviewed this course",
       });
     }
 
@@ -101,13 +101,27 @@ exports.createReview = async (req, res, next) => {
     await updateCourseRating(req.params.courseId);
 
     res.status(201).json({
+      message: "Review created successfully",
       success: true,
-      data: review
+      data: review,
     });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already reviewed this course",
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -122,7 +136,7 @@ exports.updateReview = async (req, res, next) => {
     if (!review) {
       return res.status(404).json({
         success: false,
-        message: 'Review not found'
+        message: "Review not found",
       });
     }
 
@@ -130,13 +144,13 @@ exports.updateReview = async (req, res, next) => {
     if (review.user.toString() !== req.user.id) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to update this review'
+        message: "Not authorized to update this review",
       });
     }
 
     review = await Review.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     // Update course rating
@@ -144,12 +158,24 @@ exports.updateReview = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: review
+      data: review,
     });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already reviewed this course",
+      });
+    }
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -164,15 +190,15 @@ exports.deleteReview = async (req, res, next) => {
     if (!review) {
       return res.status(404).json({
         success: false,
-        message: 'Review not found'
+        message: "Review not found",
       });
     }
 
     // Check if user owns review or is admin
-    if (review.user.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (review.user.toString() !== req.user.id && req.user.role !== "admin") {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to delete this review'
+        message: "Not authorized to delete this review",
       });
     }
 
@@ -184,12 +210,12 @@ exports.deleteReview = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Review deleted successfully'
+      message: "Review deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -197,19 +223,19 @@ exports.deleteReview = async (req, res, next) => {
 // Helper function to update course rating
 const updateCourseRating = async (courseId) => {
   const reviews = await Review.find({ course: courseId });
-  
+
   if (reviews.length === 0) {
     await Course.findByIdAndUpdate(courseId, {
       averageRating: 0,
-      totalReviews: 0
+      totalReviews: 0,
     });
   } else {
     const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
     const averageRating = totalRating / reviews.length;
-    
+
     await Course.findByIdAndUpdate(courseId, {
       averageRating: averageRating.toFixed(1),
-      totalReviews: reviews.length
+      totalReviews: reviews.length,
     });
   }
 };

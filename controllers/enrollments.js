@@ -7,7 +7,7 @@ const Course = require("../models/Course");
 exports.getEnrollments = async (req, res, next) => {
   try {
     const enrollments = await Enrollment.find({ user: req.user.id })
-      .populate("course", "title description thumbnail price instructor")
+      .populate("course", "title description thumbnail price instructor totalReviews")
       .populate("course.instructor", "name");
 
     res.status(200).json({
@@ -93,7 +93,7 @@ exports.createEnrollment = async (req, res, next) => {
 
     const enrollment = await Enrollment.create({
       user: req.user.id,
-      course: courseId,
+      course: courseId, 
     });
 
     // Update course enrollment count
@@ -146,7 +146,8 @@ exports.updateEnrollment = async (req, res, next) => {
       new: true,
       runValidators: true,
     });
-
+    
+  
     res.status(200).json({
       success: true,
       data: enrollment,

@@ -1,6 +1,6 @@
-const Payment = require('../models/Payment');
-const Course = require('../models/Course');
-const Enrollment = require('../models/Enrollment');
+const Payment = require("../models/Payment");
+const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
 
 // @desc    Get all payments for user
 // @route   GET /api/payments
@@ -8,26 +8,26 @@ const Enrollment = require('../models/Enrollment');
 exports.getPayments = async (req, res, next) => {
   try {
     let query = {};
-    
+
     // If not admin, only show user's payments
-    if (req.user.role !== 'admin') {
+    if (req.user.role !== "admin") {
       query.user = req.user.id;
     }
 
     const payments = await Payment.find(query)
-      .populate('user', 'name email')
-      .populate('course', 'title price')
-      .sort('-createdAt');
+      .populate("user", "name email")
+      .populate("course", "title price")
+      .sort("-createdAt");
 
     res.status(200).json({
       success: true,
       count: payments.length,
-      data: payments
+      data: payments,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -38,32 +38,35 @@ exports.getPayments = async (req, res, next) => {
 exports.getPayment = async (req, res, next) => {
   try {
     const payment = await Payment.findById(req.params.id)
-      .populate('user', 'name email')
-      .populate('course', 'title price');
+      .populate("user", "name email")
+      .populate("course", "title price");
 
     if (!payment) {
       return res.status(404).json({
         success: false,
-        message: 'Payment not found'
+        message: "Payment not found",
       });
     }
 
     // Check if user owns payment or is admin
-    if (payment.user._id.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (
+      payment.user._id.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this payment'
+        message: "Not authorized to access this payment",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: payment
+      data: payment,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -80,20 +83,20 @@ exports.createPayment = async (req, res, next) => {
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: "Course not found",
       });
     }
 
     // Check if user is already enrolled
     const existingEnrollment = await Enrollment.findOne({
       user: req.user.id,
-      course: courseId
+      course: courseId,
     });
 
     if (existingEnrollment) {
       return res.status(400).json({
         success: false,
-        message: 'Already enrolled in this course'
+        message: "Already enrolled in this course",
       });
     }
 
@@ -104,17 +107,18 @@ exports.createPayment = async (req, res, next) => {
       amount,
       paymentMethod,
       transactionId,
-      paymentStatus: 'pending'
+      paymentStatus: "pending",
     });
 
     res.status(201).json({
+      message: "Payment created successfully",
       success: true,
-      data: payment
+      data: payment,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -129,43 +133,61 @@ exports.updatePayment = async (req, res, next) => {
     if (!payment) {
       return res.status(404).json({
         success: false,
-        message: 'Payment not found'
+        message: "Payment not found",
       });
     }
 
     payment = await Payment.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     // If payment is completed, create enrollment
-    if (payment.paymentStatus === 'completed') {
+    if (payment.paymentStatus === "completed") {
       const existingEnrollment = await Enrollment.findOne({
         user: payment.user,
-        course: payment.course
+        course: payment.course,
       });
 
       if (!existingEnrollment) {
         await Enrollment.create({
           user: payment.user,
-          course: payment.course
+          course: payment.course,
         });
 
         // Update course enrollment count
         await Course.findByIdAndUpdate(payment.course, {
-          $inc: { enrollmentCount: 1 }
+          $inc: { enrollmentCount: 1 },
         });
       }
     }
 
     res.status(200).json({
       success: true,
-      data: payment
+      data: payment,
     });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid data provided",
+      });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Duplicate transaction ID",
+      });
+    }
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid payment ID",
+      });
+    }
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };
@@ -180,7 +202,7 @@ exports.deletePayment = async (req, res, next) => {
     if (!payment) {
       return res.status(404).json({
         success: false,
-        message: 'Payment not found'
+        message: "Payment not found",
       });
     }
 
@@ -188,12 +210,12 @@ exports.deletePayment = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Payment deleted successfully'
+      message: "Payment deleted successfully",
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server Error'
+      message: "Server Error",
     });
   }
 };

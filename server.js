@@ -10,6 +10,7 @@ const path = require("path");
 require("dotenv").config();
 
 // Route imports
+const connectMongoDB = require("./db/db");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
 const categoryRoutes = require("./routes/categories");
@@ -18,11 +19,9 @@ const lessonRoutes = require("./routes/lessons");
 const enrollmentRoutes = require("./routes/enrollments");
 const reviewRoutes = require("./routes/reviews");
 const paymentRoutes = require("./routes/payments");
-
+const lessonProgress = require("./routes/lessonProgress");
 // Error handler middleware
 const errorHandler = require("./middleware/error");
-const connectMongoDB = require("./db/db");
-const { getallLessons } = require("./controllers/lessons");
 
 const app = express();
 connectMongoDB;
@@ -74,8 +73,9 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/courses/:courseId/lessons", lessonRoutes);
 app.use("/api/lessons", lessonRoutes);
-// done upper
 app.use("/api/enrollments", enrollmentRoutes);
+app.use("/api/lessons/progress", lessonProgress);
+// done upper
 app.use("/api/courses/:courseId/reviews", reviewRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/payments", paymentRoutes);
