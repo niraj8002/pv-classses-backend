@@ -32,18 +32,18 @@ exports.sendQurey = async (req, res) => {
 };
 
 // @desc    Get all queries
-// @route   GET /api/contactus
+// @route   GET /api/query/get-query
 // @access  Private (Admin)
 exports.getQueries = async (req, res) => {
   try {
     const queries = await contactus.find().sort({ createdAt: -1 });
-
     res.status(200).json({
       success: true,
       data: queries,
     });
   } catch (error) {
     console.error(error);
+
     res.status(500).json({
       success: false,
       message: "Server Error",
