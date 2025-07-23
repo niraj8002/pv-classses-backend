@@ -9,7 +9,7 @@ exports.getReviews = async (req, res) => {
   try {
     const courseId = await Course.findOne({ slug: req.params.courseId });
     const reviews = await Review.find({ course: courseId._id })
-      .populate("user", "name")
+      .populate("user", "name avatar" )
       .sort("-createdAt");
     // console.log(req.params);
 
