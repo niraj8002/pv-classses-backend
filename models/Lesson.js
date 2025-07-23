@@ -1,49 +1,49 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const lessonSchema = new mongoose.Schema({
   course: {
     type: mongoose.Schema.ObjectId,
-    ref: 'Course',
-    required: true
+    ref: "Course",
+    required: true,
   },
   title: {
     type: String,
-    required: [true, 'Please add a lesson title'],
+    required: [true, "Please add a lesson title"],
     trim: true,
-    maxlength: [150, 'Title cannot be more than 150 characters']
+    maxlength: [150, "Title cannot be more than 150 characters"],
   },
   content: {
     type: String,
-    required: [true, 'Please add lesson content']
+    required: [true, "Please add lesson content"],
   },
-  videoUrl: {
+  videourl: {
     type: String,
-    default: null
+    default: null,
   },
   order: {
     type: Number,
-    default: 0
+    default: 0,
   },
   duration: {
     type: String,
-    default: null
+    default: null,
   },
   isFree: {
     type: Boolean,
-    default: false
+    default: false,
   },
-  resources: [{
-    title: String,
-    url: String,
-    type: {
-      type: String,
-      enum: ['pdf', 'video', 'link', 'document']
-    }
-  }],
+  // resources: [{
+  //   title: String,
+  //   url: String,
+  //   type: {
+  //     type: String,
+  //     enum: ['pdf', 'video', 'link', 'document']
+  //   }
+  // }],
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-module.exports = mongoose.model('Lesson', lessonSchema);
+module.exports = mongoose.model("Lesson", lessonSchema);

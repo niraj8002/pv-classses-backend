@@ -24,16 +24,19 @@ exports.getallLessons = async (req, res, next) => {
 
 exports.getLessons = async (req, res, next) => {
   try {
-    const lessons = await Lesson.find({ course: req.params.courseId }).sort(
-      "order"
-    );
+    const course = await Course.findOne({ slug: req.params.courseId });
+    const lessons = await Lesson.find({ course: course._id }).sort("order");
 
     res.status(200).json({
+      message: `Lessons for course `,
       success: true,
+      isEnrolled: req.isEnrolled,
       count: lessons.length,
       data: lessons,
     });
   } catch (error) {
+    // console.log(error);
+
     res.status(500).json({
       success: false,
       message: "Server Error",
@@ -73,52 +76,38 @@ exports.getLesson = async (req, res, next) => {
 // @desc    Create new lesson
 // @route   POST /api/courses/:courseId/lessons
 // @access  Private
-exports.createLesson = async (req, res, next) => {
+exports.createLesson = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.courseId);
+    const { courseId } = req.params;
+    const course = await Course.findOne({ slug: courseId });
 
     if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: "Course not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found" });
     }
 
-    // Check if user is course owner
-    if (
-      course.instructor.toString() !== req.user.id &&
-      req.user.role !== "admin"
-    ) {
-      return res.status(401).json({
-        success: false,
-        message: "User not authorized to add lessons to this course",
-      });
-    }
-
-    req.body.course = req.params.courseId;
-
-    const lesson = await Lesson.create(req.body);
-
-    // Update course totalLessons
-    await Course.findByIdAndUpdate(req.params.courseId, {
-      $inc: { totalLessons: 1 },
+    const lesson = await Lesson.create({
+      ...req.body,
+      course: course._id, // use the ObjectId here
     });
 
-    res.status(201).json({
-      success: true,
-      data: lesson,
-    });
+    res.status(201).json({ success: true, data: lesson });
   } catch (error) {
+    console.error(error);
     if (error.name === "ValidationError") {
       return res.status(400).json({
         success: false,
         message: error.message,
       });
     }
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Lesson with this title already exists",
+      });
+    }
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 

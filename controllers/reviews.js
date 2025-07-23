@@ -5,11 +5,13 @@ const Enrollment = require("../models/Enrollment");
 // @desc    Get all reviews for a course
 // @route   GET /api/courses/:courseId/reviews
 // @access  Public
-exports.getReviews = async (req, res, next) => {
+exports.getReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ course: req.params.courseId })
+    const courseId = await Course.findOne({ slug: req.params.courseId });
+    const reviews = await Review.find({ course: courseId._id })
       .populate("user", "name")
       .sort("-createdAt");
+    // console.log(req.params);
 
     res.status(200).json({
       success: true,
@@ -57,7 +59,8 @@ exports.getReview = async (req, res, next) => {
 // @access  Private
 exports.createReview = async (req, res, next) => {
   try {
-    const course = await Course.findById(req.params.courseId);
+    const course = await Course.findOne({ slug: req.params.courseId });
+    // console.log(req.params);
 
     if (!course) {
       return res.status(404).json({
@@ -69,7 +72,7 @@ exports.createReview = async (req, res, next) => {
     // Check if user is enrolled in the course
     const enrollment = await Enrollment.findOne({
       user: req.user.id,
-      course: req.params.courseId,
+      course: course._id,
     });
 
     if (!enrollment) {
@@ -82,7 +85,7 @@ exports.createReview = async (req, res, next) => {
     // Check if user has already reviewed this course
     const existingReview = await Review.findOne({
       user: req.user.id,
-      course: req.params.courseId,
+      course: course._id,
     });
 
     if (existingReview) {
@@ -93,12 +96,12 @@ exports.createReview = async (req, res, next) => {
     }
 
     req.body.user = req.user.id;
-    req.body.course = req.params.courseId;
+    req.body.course = course._id;
 
     const review = await Review.create(req.body);
 
     // Update course rating
-    await updateCourseRating(req.params.courseId);
+    await updateCourseRating(course._id);
 
     res.status(201).json({
       message: "Review created successfully",

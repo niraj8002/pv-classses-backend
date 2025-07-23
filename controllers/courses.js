@@ -1,3 +1,4 @@
+const Category = require("../models/Category");
 const Course = require("../models/Course");
 const User = require("../models/User");
 
@@ -9,6 +10,14 @@ exports.getCourses = async (req, res, next) => {
     const reqQuery = { ...req.query };
     const removeFields = ["select", "sort", "page", "limit"];
     removeFields.forEach((param) => delete reqQuery[param]);
+
+    if (req.query.keyword) {
+      reqQuery.$or = [
+        { title: { $regex: req.query.keyword, $options: "i" } },
+        { description: { $regex: req.query.keyword, $options: "i" } },
+      ];
+      delete reqQuery.keyword;
+    }
 
     // Create query string
     let queryStr = JSON.stringify(reqQuery);
@@ -68,6 +77,7 @@ exports.getCourses = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: courses.length,
+      total,
       pagination,
       data: courses,
     });
@@ -84,8 +94,8 @@ exports.getCourses = async (req, res, next) => {
 // @access  Public
 exports.getCourse = async (req, res, next) => {
   try {
-    const course = await Course.findById(req.params.id)
-      .populate("instructor", "name email bio")
+    const course = await Course.findOne({ slug: req.params.id })
+      .populate("instructor", "name email bio avatar")
       .populate("category", "name");
 
     if (!course) {
@@ -112,10 +122,18 @@ exports.getCourse = async (req, res, next) => {
 // @access  Private
 exports.createCourse = async (req, res, next) => {
   try {
-    req.body.instructor = req.user.id; // ← YEH LINE automatically set kar rahi hai
+    req.body.instructor = req.user.id;
+    const category = req.body.category || null;
+    const ifAvailableCategory = await Category.findById(category);
+    if (!ifAvailableCategory) {
+      return res.status(400).json({
+        success: false,
+        message: "Category not found",
+      });
+    }
 
     if (req.file) {
-      req.body.thumbnail = `${process.env.BASE_URL}/thumbnail/${req.file.filename}`;
+      req.body.thumbnail = `${process.env.BASE_URL}/upload/${req.file.filename}`;
     }
 
     const course = await Course.create(req.body);
@@ -160,7 +178,7 @@ exports.updateCourse = async (req, res, next) => {
     }
     // Make sure user is course owner
     if (req.file) {
-      req.body.thumbnail = `${process.env.BASE_URL}/thumbnail/${req.file.filename}`;
+      req.body.thumbnail = `${process.env.BASE_URL}/upload/${req.file.filename}`;
     }
 
     if (
@@ -172,7 +190,7 @@ exports.updateCourse = async (req, res, next) => {
         message: "User not authorized to update this course",
       });
     }
-    console.log(req.body);
+    // console.log(req.body);
 
     course = await Course.findByIdAndUpdate(req.params.id, req.body, {
       new: true,

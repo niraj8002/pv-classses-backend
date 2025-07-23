@@ -13,7 +13,12 @@ const upload = require("../middleware/multer");
 const router = express.Router();
 
 router
-  .route("/").get(getCourses).post(upload.single("thumbnail"),protect,authorize("instructor", "admin"),
+  .route("/")
+  .get(getCourses)
+  .post(
+    protect,
+    authorize("instructor", "admin"),
+    upload.single("thumbnail"),
     createCourse
   );
 

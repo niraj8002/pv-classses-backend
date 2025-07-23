@@ -30,6 +30,8 @@ const sendTokenResponse = (user, statusCode, res, message) => {
         role: user.role,
         avatar: user.avatar ? user.avatar : null,
         bio: user.bio ? user.bio : "N/A",
+        phoneNumber: user.phoneNumber ? user.phoneNumber : "N/A",
+        gender: user.gender ? user.gender : "N/A",
       },
     });
 };
@@ -48,22 +50,33 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    const { name, email, password, role, bio } = req.body;
+    const { name, email, phoneNumber, password, role, bio, gender } = req.body;
+    const checkphoneNumber = await User.findOne({ phoneNumber: phoneNumber });
+    if (checkphoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number already exists",
+      });
+    }
 
     // Create user
     let avatarUrl = null;
     if (req.file) {
       avatarUrl = `${process.env.BASE_URL}/upload/${req.file.filename}`;
     }
+    // console.log("Avatar URL:", avatarUrl);
+    // console.log("req.file:", req.file);
 
     // ✅ Create user
     const user = await User.create({
       name,
       email,
+      phoneNumber,
       password,
       role,
       avatar: avatarUrl || null,
       bio,
+      gender,
     });
 
     sendTokenResponse(user, 200, res, "User registered successfully");
@@ -73,7 +86,7 @@ exports.register = async (req, res, next) => {
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: "Email already exists",
+        message: "Email already number exists",
       });
     }
     res.status(500).json({
@@ -167,7 +180,7 @@ exports.logout = async (req, res, next) => {
 // @access  Private
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, email, bio } = req.body;
+    const { name, email, bio, phoneNumber, gender } = req.body;
 
     // 1️⃣ Check if email already exists for another user
     const existingUser = await User.findOne({ email });
@@ -189,6 +202,8 @@ exports.updateProfile = async (req, res, next) => {
       name,
       email,
       bio,
+      phoneNumber,
+      gender,
     };
 
     if (avatar) {
@@ -207,6 +222,18 @@ exports.updateProfile = async (req, res, next) => {
       data: user,
     });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already exists",
+      });
+    }
     console.error("Update Error:", error);
     res.status(500).json({
       success: false,

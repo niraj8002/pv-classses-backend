@@ -28,7 +28,6 @@ exports.updateLessonProgress = async (req, res, next) => {
     });
 
     if (progress) {
-      // update
       progress.completed = completed ?? progress.completed;
       progress.watchTime = watchTime ?? progress.watchTime;
       progress.lastWatchedAt = new Date();
@@ -52,7 +51,7 @@ exports.updateLessonProgress = async (req, res, next) => {
       data: progress,
     });
   } catch (err) {
-    console.log(err);
+    // console.log(err);
 
     if (err.name === "ValidationError") {
       return res.status(400).json({

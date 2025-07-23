@@ -7,8 +7,18 @@ const Course = require("../models/Course");
 exports.getEnrollments = async (req, res, next) => {
   try {
     const enrollments = await Enrollment.find({ user: req.user.id })
-      .populate("course", "title description thumbnail price instructor totalReviews")
+      .populate(
+        "course",
+        "title slug description thumbnail price instructor totalReviews"
+      )
       .populate("course.instructor", "name");
+
+    if (!enrollments || enrollments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No enrollments found",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -93,7 +103,7 @@ exports.createEnrollment = async (req, res, next) => {
 
     const enrollment = await Enrollment.create({
       user: req.user.id,
-      course: courseId, 
+      course: courseId,
     });
 
     // Update course enrollment count
@@ -146,8 +156,7 @@ exports.updateEnrollment = async (req, res, next) => {
       new: true,
       runValidators: true,
     });
-    
-  
+
     res.status(200).json({
       success: true,
       data: enrollment,

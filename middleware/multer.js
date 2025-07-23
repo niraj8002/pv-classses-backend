@@ -5,17 +5,9 @@ const fs = require("fs");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     // 🔁 Custom logic: kis folder me save karein
-    let uploadPath;
-
-    if (file.fieldname === "avatar") {
-      uploadPath = "public/upload";
-    } else if (file.fieldname === "thumbnail") {
-      uploadPath = "public/upload/thumbnail";
-    } else {
-      uploadPath = "public/upload/others";
-    }
-
+    let uploadPath = path.join(__dirname, "../public/upload");
     // ❗ Make sure directory exists
+    
     fs.mkdirSync(uploadPath, { recursive: true });
 
     cb(null, uploadPath);

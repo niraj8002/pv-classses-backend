@@ -19,6 +19,9 @@ router.post(
   [
     body("name").notEmpty().withMessage("Name is required"),
     body("email").isEmail().withMessage("Please provide a valid email"),
+    body("phoneNumber")
+      .matches(/^\d{10}$/)
+      .withMessage("Please provide a valid phone number"),
     body("password")
       .isLength({ min: 6 })
       .withMessage("Password must be at least 6 characters"),

@@ -35,6 +35,12 @@ const courseSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  ispropular: {
+    type: String,
+    enum: ["popular", "normal"],
+    default: "normal",
+  },
+
   thumbnail: {
     type: String,
     default: null,
@@ -62,7 +68,7 @@ const courseSchema = new mongoose.Schema({
     default: 0,
   },
   totalReviews: {
-    type: Number,
+    type: Number,   
     default: 0,
   },
   enrollmentCount: {
