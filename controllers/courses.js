@@ -132,6 +132,12 @@ exports.createCourse = async (req, res, next) => {
       });
     }
 
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Thumbnail photo is required",
+      });
+    }
     if (req.file) {
       req.body.thumbnail = `${process.env.BASE_URL}/upload/${req.file.filename}`;
     }
@@ -164,11 +170,12 @@ exports.createCourse = async (req, res, next) => {
 };
 
 // @desc    Update course
-// @route   PUT /api/courses/:id
+// @route   PUT /api/courses/:courseId
 // @access  Private
-exports.updateCourse = async (req, res, next) => {
+exports.updateCourse = async (req, res) => {
   try {
-    let course = await Course.findById(req.params.id);
+    let course = await Course.findOne({ slug: req.params.id });
+    console.log(req.params.id);
 
     if (!course) {
       return res.status(404).json({
@@ -192,16 +199,22 @@ exports.updateCourse = async (req, res, next) => {
     }
     // console.log(req.body);
 
-    course = await Course.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    course = await Course.findOneAndUpdate(
+      { slug: req.params.id },
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     res.status(200).json({
       success: true,
       data: course,
     });
   } catch (error) {
+    console.log(error);
+
     if (error.name === "ValidationError") {
       return res.status(400).json({
         success: false,
@@ -226,7 +239,7 @@ exports.updateCourse = async (req, res, next) => {
 // @access  Private
 exports.deleteCourse = async (req, res, next) => {
   try {
-    const course = await Course.findById(req.params.id);
+    let course = await Course.findOne({ slug: req.params.id });
 
     if (!course) {
       return res.status(404).json({

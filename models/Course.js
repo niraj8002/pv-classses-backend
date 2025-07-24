@@ -43,7 +43,7 @@ const courseSchema = new mongoose.Schema({
 
   thumbnail: {
     type: String,
-    default: null,
+    required: [true, "Please add a thumbnail photo"],
   },
   status: {
     type: String,
@@ -68,7 +68,7 @@ const courseSchema = new mongoose.Schema({
     default: 0,
   },
   totalReviews: {
-    type: Number,   
+    type: Number,
     default: 0,
   },
   enrollmentCount: {
@@ -80,6 +80,14 @@ const courseSchema = new mongoose.Schema({
       type: String,
     },
   ],
+  learningOutcomes: {
+    type: [String],
+    required: [true, "Please add point (What you'll learn?)"],
+  },
+  requirements: {
+    type: [String],
+    required: [true, "Please add point (requirements)"],
+  },
   createdAt: {
     type: Date,
     default: Date.now,
